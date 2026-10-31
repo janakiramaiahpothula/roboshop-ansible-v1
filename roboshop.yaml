@@ -3,7 +3,7 @@
   connection: local
   vars:
    instances: ["mongodb", "redis", "mysql", "rabbitmq"]
-   action: create
+   action: delete
    domain_name: classpractice.online
    ami_id: ami-0055977a6e828a4f4
   tasks:
@@ -17,7 +17,7 @@
      - "roboshop-{{ item }}"
      region: us-east-1
     loop: "{{ instances }}"
-    when: action== "create"
+    when: action== "delete"
     register: ec2_output
 
 
