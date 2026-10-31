@@ -13,8 +13,12 @@
      image_id: ami_id
      instance_type: t3.micro
      security_groups: 
+     - roboshop-common
      - "roboshop-{{ item }}"
      region: us-east-1
     loop: "{{ instances }}"
     when: action== "create"
     register: ec2_output
+
+    
+
