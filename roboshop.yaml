@@ -27,7 +27,7 @@
         record: "{{ item.item }}.{{ domain_name }}"
         type: A
         ttl: 1
-        value: "{{ item.instance.private_ip_address }}"
+        value: "{{ item.instances.private_ip_address }}"
         overwrite: true
       loop: "{{ ec2_output.results }}"
       when: action == "create"
@@ -38,6 +38,6 @@
         zone: "{{ domain_name }}"
         record: "{{ item.item }}.{{ domain_name }}"
         type: A
-        value: "{{ item.instance.private_ip_address }}"
+        value: "{{ item.instances.private_ip_address }}"
       loop: "{{ ec2_output.results }}"
       when: action == "create"
