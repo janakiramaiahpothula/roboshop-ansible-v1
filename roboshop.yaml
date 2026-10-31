@@ -1,13 +1,13 @@
-- name: create ec2 instance and r53 records
+- name: delete ec2 instance and r53 records
   hosts: local
   connection: local
   vars:
     instances: ["mongodb", "redis", "mysql"]
-    action: create
+    action: delete
     domain_name: classpractice.online
     ami_id: ami-0055977a6e828a4f4
   tasks:
-    - name: create ec2 instance
+    - name: delete ec2 instance
       amazon.aws.ec2_instance:
         name: "roboshop-{{ item }}"
         image_id: "{{ ami_id }}"
@@ -17,10 +17,10 @@
           - "roboshop-{{ item }}"
         region: us-east-1
       loop: "{{ instances }}"
-      when: action == "create"
+      when: action == "delete"
       register: ec2_output
 
-    - name: create r53 record
+    - name: delete r53 record
       amazon.aws.route53:
         state: present
         zone: "{{ domain_name }}"
@@ -30,7 +30,7 @@
         value: "{{ item.instances[0].private_ip_address }}"
         overwrite: true
       loop: "{{ ec2_output.results }}"
-      when: action == "create"
+      when: action == "delete"
 
     - name: delete r53 records
       amazon.aws.route53:
