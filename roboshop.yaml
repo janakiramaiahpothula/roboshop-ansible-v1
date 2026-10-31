@@ -40,4 +40,4 @@
         type: A
         value: "{{ item.instances.private_ip_address }}"
       loop: "{{ ec2_output.results }}"
-      when: action == "create"
+      when: action == "delete"
