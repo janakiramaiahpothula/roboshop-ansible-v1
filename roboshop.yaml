@@ -15,6 +15,6 @@
      security_groups: 
      - "roboshop-{{ item }}"
      region: us-east-1
-    loop: {{instances}} 
+    loop: "{{ instances }}"
     when: action== "create"
     register: ec2_output
