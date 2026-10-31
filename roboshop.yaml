@@ -3,7 +3,7 @@
   connection: local
   vars:
     instances: ["mongodb", "redis", "mysql"]
-    action: delete
+    action: create
     domain_name: classpractice.online
     ami_id: ami-0055977a6e828a4f4
   tasks:
@@ -40,4 +40,4 @@
         type: A
         value: "{{ item.instance.private_ip_address }}"
       loop: "{{ ec2_output.results }}"
-      when: action == "delete"
+      when: action == "create"
