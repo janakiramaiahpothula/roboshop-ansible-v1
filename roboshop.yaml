@@ -21,4 +21,23 @@
     register: ec2_output
 
 
+- name: create R53 record 
+  amazon.aws.rout53:
+   state: present
+   zone: "{{ domain_name }}"
+   record: "{{ item.item }}. {{ domain_name }}"
+   type: A
+   ttl: 1
+   value: "{{ item.instances[0].private_ip4_address }}"
+   overwrite: true
+  loop: "{{ ec2_output.result }}"
+  when: action== "create"
+  
+- name: delete r53 records
+  amazon.aws.route53:
+   state: absent
+   zone: "{{ domain_name }}"
+   
+
+
 
