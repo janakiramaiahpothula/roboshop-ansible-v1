@@ -1,6 +1,6 @@
 - name: configure redis server
   hosts: redis
-  become: yse
+  become: yes
   tasks:
   - name: enableredis 7
     command: dnf module enable redis:7 -y
