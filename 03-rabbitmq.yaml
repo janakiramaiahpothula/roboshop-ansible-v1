@@ -17,7 +17,7 @@
   - name: start and enable rabbitmq server
     service:
      name: rabbitmq-server
-     state: strted
+     state: started
      enabled: yes
 
   - name: create rabbitmq user
