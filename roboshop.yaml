@@ -26,6 +26,7 @@
          from_port: 22
          to_port: 22
          cidr_ip: "0.0.0.0/0" 
+         state: present
          register: sg_result
 
   - name: Print Created Security Group ID
