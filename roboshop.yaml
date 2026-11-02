@@ -167,7 +167,6 @@
       amazon.aws.route53:
         state: absent
         zone: "{{ domain_name }}"
-        private_zone: true
         record: "{{ item }}.{{ domain_name }}"
         type: A
       loop:
