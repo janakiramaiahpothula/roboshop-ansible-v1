@@ -10,14 +10,14 @@
     security_groups: ["mongodb1", "redis1", "rabbitmq1", "frontend1"]
   tasks:
 
- - name: Create security groups for EC2 instances
-   amazon.aws.ec2_security_group:
+- name: Create security groups for EC2 instances
+  amazon.aws.ec2_security_group:
       name: "{{ item }}"
       description: "Security group for {{ item }}"
       state: present
       region: us-east-1
-   loop: "{{ security_groups }}"
-   when: action == "create"
+  loop: "{{ security_groups }}"
+  when: action == "create"
   
 - name: create ec2 instance
   amazon.aws.ec2_instance:
