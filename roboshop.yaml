@@ -134,21 +134,6 @@
       register: ec2_output
       when: action == "create"
 
-    # 8. CREATE BACKEND PRIVATE DNS RECORDS
-    - name: Create backend Route53 records
-      amazon.aws.route53:
-        state: present
-        zone: "{{ domain_name }}"
-        private_zone: true
-        record: "{{ item.item }}.{{ domain_name }}"
-        type: A
-        ttl: 1
-        value: "{{ item.instances[0].private_ip_address }}"
-        overwrite: true
-      loop: "{{ ec2_output.results | default([]) }}"
-      when:
-        - action == "create"
-        - item.item != "frontend"
 
     # 9. CREATE FRONTEND PUBLIC DNS RECORD
     - name: Create frontend Route53 record
