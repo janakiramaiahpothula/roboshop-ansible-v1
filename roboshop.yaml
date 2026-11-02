@@ -83,3 +83,9 @@
     loop: "{{ instances }}" 
     when: action == "delete" 
 
+  - name: Delete security groups
+    amazon.aws.ec2_security_group:
+        name: "{{ item }}"
+        state: absent
+        region: us-east-1
+    loop: "{{ security_groups }}"  
