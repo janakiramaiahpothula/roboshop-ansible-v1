@@ -7,12 +7,12 @@
     action: create
     domain_name: classpractice.online
     ami_id: ami-0055977a6e828a4f4
-    security_groups: ["mongodb1", "redis1", "rabbitmq1", "frontend1"]
+    security_groups: ["mongodb", "redis", "rabbitmq", "frontend"]
   tasks:
   
   - name: Create security groups for EC2 instances
     amazon.aws.ec2_security_group:
-      name: "{{ item }}"
+      name: "roboshop-{{ item }}"
       description: "Security group for {{ item }}"
       state: present
       region: us-east-1
