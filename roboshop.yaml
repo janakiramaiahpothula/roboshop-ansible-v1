@@ -8,8 +8,9 @@
     domain_name: classpractice.online
     ami_id: ami-0055977a6e828a4f4
     security_groups: ["mongodb", "redis", "rabbitmq", "frontend"]
+    ssh_source_ip: "223.228.102.235"
   tasks:
-  
+    
   - name: Create security groups for EC2 instances
     amazon.aws.ec2_security_group:
       name: "roboshop-{{ item }}"
@@ -18,6 +19,70 @@
       region: us-east-1
     loop: "{{ security_groups }}"
     when: action == "create"
+
+  - name: Allow SSH access
+    amazon.aws.ec2_security_group:
+     name: roboshop-common
+     description: Common security group
+     state: present
+     region: us-east-1
+     rules:
+      - proto: tcp
+        ports:
+          - 22
+        cidr_ip: "{{ ssh_source_ip }}"
+        rule_desc: SSH from my IP
+
+  - name: Allow frontend HTTP and HTTPS
+    amazon.aws.ec2_security_group:
+     name: roboshop-frontend1
+     description: Frontend security group
+     state: present
+     region: us-east-1
+     rules:
+      - proto: tcp
+        ports:
+          - 80
+          - 443
+        cidr_ip: 0.0.0.0/0
+        rule_desc: Public web traffic
+  
+  - name: Allow MongoDB access
+    amazon.aws.ec2_security_group:
+     name: roboshop-mongodb1
+     description: MongoDB security group
+     state: present
+     region: us-east-1
+     rules:
+      - proto: tcp
+        ports: 27017
+        group_name: roboshop-frontend1
+
+  - name: Allow Redis access
+    amazon.aws.ec2_security_group:
+     name: roboshop-redis1
+     description: Redis security group
+     state: present
+     region: us-east-1
+     rules:
+      - proto: tcp
+        ports: 6379
+        group_name: roboshop-frontend1
+
+  - name: Allow RabbitMQ access
+    amazon.aws.ec2_security_group:
+     name: roboshop-rabbitmq1
+     description: RabbitMQ security group
+     state: present
+     region: us-east-1
+     rules:
+      - proto: tcp
+        ports: 5672
+        group_name: roboshop-frontend1
+      - proto: tcp
+        ports: 15672
+        cidr_ip: "{{ ssh_source_ip }}"
+        rule_desc: RabbitMQ management from my IP
   
   - name: create ec2 instance
     amazon.aws.ec2_instance:
