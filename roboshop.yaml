@@ -1,155 +1,215 @@
-- name: create ec2 instance and r53 records
-  hosts: local
+
+---
+- name: Create EC2 instances and Route53 records
+  hosts: localhost
   connection: local
+  gather_facts: false
+
   vars:
-  
-    instances: ["mongodb", "redis", "rabbitmq"]
+    instances:
+      - mongodb
+      - redis
+      - rabbitmq
+      - frontend
+
     action: create
+
     domain_name: classpractice.online
     ami_id: ami-0055977a6e828a4f4
-    security_groups: ["mongodb", "redis", "rabbitmq", "frontend"]
-    ssh_source_ip: "223.228.102.235"
+    aws_region: us-east-1
+
+    ssh_source_ip: "223.228.102.235/32"
+
+    security_groups:
+      - common
+      - mongodb
+      - redis
+      - rabbitmq
+      - frontend
+
   tasks:
-    
-  - name: Create security groups for EC2 instances
-    amazon.aws.ec2_security_group:
-      name: "roboshop-{{ item }}"
-      description: "Security group for {{ item }}"
-      state: present
-      region: us-east-1
-    loop: "{{ security_groups }}"
-    when: action == "create"
 
-  - name: Allow SSH access
-    amazon.aws.ec2_security_group:
-     name: roboshop-common
-     description: Common security group
-     state: present
-     region: us-east-1
-     rules:
-      - proto: tcp
-        ports:
-          - 22
-        cidr_ip: "{{ ssh_source_ip }}"
-        rule_desc: SSH from my IP
+    # 1. CREATE SECURITY GROUPS
+    - name: Create security groups for EC2 instances
+      amazon.aws.ec2_security_group:
+        name: "roboshop-{{ item }}"
+        description: "Security group for roboshop-{{ item }}"
+        state: present
+        region: "{{ aws_region }}"
+      loop: "{{ security_groups }}"
+      when: action == "create"
 
-  - name: Allow frontend HTTP and HTTPS
-    amazon.aws.ec2_security_group:
-     name: roboshop-frontend1
-     description: Frontend security group
-     state: present
-     region: us-east-1
-     rules:
-      - proto: tcp
-        ports:
-          - 80
-          - 443
-        cidr_ip: 0.0.0.0/0
-        rule_desc: Public web traffic
-  
-  - name: Allow MongoDB access
-    amazon.aws.ec2_security_group:
-     name: roboshop-mongodb1
-     description: MongoDB security group
-     state: present
-     region: us-east-1
-     rules:
-      - proto: tcp
-        ports: 27017
-        group_name: roboshop-frontend1
+    # 2. ALLOW SSH
+    - name: Allow SSH access
+      amazon.aws.ec2_security_group:
+        name: roboshop-common
+        description: Common security group
+        state: present
+        region: "{{ aws_region }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 22
+            cidr_ip: "{{ ssh_source_ip }}"
+            rule_desc: SSH from my public IP
+      when: action == "create"
 
-  - name: Allow Redis access
-    amazon.aws.ec2_security_group:
-     name: roboshop-redis1
-     description: Redis security group
-     state: present
-     region: us-east-1
-     rules:
-      - proto: tcp
-        ports: 6379
-        group_name: roboshop-frontend1
+    # 3. ALLOW FRONTEND HTTP AND HTTPS
+    - name: Allow frontend HTTP and HTTPS
+      amazon.aws.ec2_security_group:
+        name: roboshop-frontend
+        description: Frontend security group
+        state: present
+        region: "{{ aws_region }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 80
+              - 443
+            cidr_ip: 0.0.0.0/0
+            rule_desc: Public web traffic
+      when: action == "create"
 
-  - name: Allow RabbitMQ access
-    amazon.aws.ec2_security_group:
-     name: roboshop-rabbitmq1
-     description: RabbitMQ security group
-     state: present
-     region: us-east-1
-     rules:
-      - proto: tcp
-        ports: 5672
-        group_name: roboshop-frontend1
-      - proto: tcp
-        ports: 15672
-        cidr_ip: "{{ ssh_source_ip }}"
-        rule_desc: RabbitMQ management from my IP
-  
-  - name: create ec2 instance
-    amazon.aws.ec2_instance:
-     name: "roboshop-{{ item }}" 
-     image_id: "{{ ami_id }}"
-     instance_type: t3.micro
-     region: us-east-1
-     security_groups: "roboshop-{{ item }}"
-    loop: "{{ instances }}" 
-    when: action == "create"
-    register: ec2_output
+    # 4. ALLOW MONGODB
+    - name: Allow MongoDB access
+      amazon.aws.ec2_security_group:
+        name: roboshop-mongodb
+        description: MongoDB security group
+        state: present
+        region: "{{ aws_region }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 27017
+            group_name: roboshop-common
+      when: action == "create"
 
-  - name: create r53 records
-    amazon.aws.route53:
-      state: present
-      zone: "{{ domain_name }}"
-      record: "{{ item.item }}.{{ domain_name }}"
-      type: A
-      ttl: 1
-      value: "{{ item.instances[0].private_ip_address }}"
-      overwrite: yes
-    loop: "{{ ec2_output.results }}"  
-    when: action == "create"
+    # 5. ALLOW REDIS
+    - name: Allow Redis access
+      amazon.aws.ec2_security_group:
+        name: roboshop-redis
+        description: Redis security group
+        state: present
+        region: "{{ aws_region }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 6379
+            group_name: roboshop-common
+      when: action == "create"
 
-  - name: create r53 record for frontend
-    amazon.aws.route53:
-      state: present
-      zone: "{{ domain_name }}"
-      record: "{{ domain_name }}" 
-      type: A
-      ttl: 1
-      value: "{{ item.instances[0].public_ip_address }}"
-      overwrite: true
-    loop: "{{ ec2_output.results }}"
-    when: action == "create"
+    # 6. ALLOW RABBITMQ
+    - name: Allow RabbitMQ access
+      amazon.aws.ec2_security_group:
+        name: roboshop-rabbitmq
+        description: RabbitMQ security group
+        state: present
+        region: "{{ aws_region }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 5672
+            group_name: roboshop-common
+          - proto: tcp
+            ports:
+              - 15672
+            cidr_ip: "{{ ssh_source_ip }}"
+            rule_desc: RabbitMQ management from my IP
+      when: action == "create"
 
-  - name: delete r53 records
-    amazon.aws.route53:
-     state: absent
-     zone: "{{ domain_name }}"  
-     record: "{{ item }}.{{ domain_name }}"
-     ttl: 1
-     type: A
-    loop: "{{ instances }}"
-    when: action == "delete"
+    # 7. CREATE EC2 INSTANCES
+    - name: Create EC2 instances
+      amazon.aws.ec2_instance:
+        name: "roboshop-{{ item }}"
+        image_id: "{{ ami_id }}"
+        instance_type: t3.micro
+        region: "{{ aws_region }}"
+        security_groups:
+          - roboshop-common
+          - "roboshop-{{ item }}"
+        network:
+          assign_public_ip: "{{ item == 'frontend' }}"
+        state: present
+        wait: true
+      loop: "{{ instances }}"
+      register: ec2_output
+      when: action == "create"
 
-  - name: delete r53 records for frontend
-    amazon.aws.route53:
-      state: absent
-      zone: "{{ domain_name }}"
-      record: "{{ domain_name }}"
-      ttl: 1
-      type: A
-    when: action == "delete" 
-  
-  - name: delete ec2 instances
-    amazon.aws.ec2_instance:
-      state: absent
-      name: "roboshop-{{ item }}"
-      region: us-east-1
-      wait: false
-    loop: "{{ instances }}" 
-    when: action == "delete" 
-  
-  - name: Delete security groups
-    amazon.aws.ec2_security_group:
-        name: "{{ item }}"
+    # 8. CREATE BACKEND PRIVATE DNS RECORDS
+    - name: Create backend Route53 records
+      amazon.aws.route53:
+        state: present
+        zone: "{{ domain_name }}"
+        private_zone: true
+        record: "{{ item.item }}.{{ domain_name }}"
+        type: A
+        ttl: 60
+        value: "{{ item.instances[0].private_ip_address }}"
+        overwrite: true
+      loop: "{{ ec2_output.results | default([]) }}"
+      when:
+        - action == "create"
+        - item.item != "frontend"
+
+    # 9. CREATE FRONTEND PUBLIC DNS RECORD
+    - name: Create frontend Route53 record
+      amazon.aws.route53:
+        state: present
+        zone: "{{ domain_name }}"
+        record: "{{ domain_name }}"
+        type: A
+        ttl: 60
+        value: "{{ item.instances[0].public_ip_address }}"
+        overwrite: true
+      loop: "{{ ec2_output.results | default([]) }}"
+      when:
+        - action == "create"
+        - item.item == "frontend"
+
+    # 10. DELETE BACKEND DNS RECORDS
+    - name: Delete backend Route53 records
+      amazon.aws.route53:
         state: absent
-        region: us-east-1
-    loop: "{{ security_groups }}"  
+        zone: "{{ domain_name }}"
+        private_zone: true
+        record: "{{ item }}.{{ domain_name }}"
+        type: A
+      loop:
+        - mongodb
+        - redis
+        - rabbitmq
+      when: action == "delete"
+
+    # 11. DELETE FRONTEND DNS RECORD
+    - name: Delete frontend Route53 record
+      amazon.aws.route53:
+        state: absent
+        zone: "{{ domain_name }}"
+        record: "{{ domain_name }}"
+        type: A
+      when: action == "delete"
+
+    # 12. DELETE EC2 INSTANCES
+    - name: Delete EC2 instances
+      amazon.aws.ec2_instance:
+        state: absent
+        filters:
+          "tag:Name": "roboshop-{{ item }}"
+        region: "{{ aws_region }}"
+        wait: true
+      loop: "{{ instances }}"
+      when: action == "delete"
+
+    # 13. DELETE SECURITY GROUPS
+    - name: Delete security groups
+      amazon.aws.ec2_security_group:
+        name: "roboshop-{{ item }}"
+        state: absent
+        region: "{{ aws_region }}"
+      loop:
+        - frontend
+        - rabbitmq
+        - redis
+        - mongodb
+        - common
+      when: action == "delete"
