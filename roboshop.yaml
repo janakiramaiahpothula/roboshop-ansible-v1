@@ -100,7 +100,7 @@
         zone: "{{ domain_name }}"
         record: "{{ item.item }}.{{ domain_name }}"
         type: A
-        ttl: 60
+        ttl: 1
         value: "{{ item.instances[0].private_ip_address }}"
         overwrite: true
       loop: "{{ ec2_output.results | default([]) }}"
@@ -112,7 +112,7 @@
         zone: "{{ domain_name }}"
         record: "{{ domain_name }}"
         type: A
-        ttl: 60
+        ttl: 1
         value: "{{ item.instances[0].public_ip_address }}"
         overwrite: true
       loop: "{{ ec2_output.results | default([]) }}"
