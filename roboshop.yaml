@@ -6,7 +6,7 @@
     instances: ["mongodb", "redis", "rabbitmq"]
     action: create
     domain_name: classpractice.online
-    ami_id: ami-0c55b159cbfafe1f0
+    ami_id: ami-0055977a6e828a4f4
   tasks:
   - name: create ec2 instance
     amazon.aws.ec2_instance:
