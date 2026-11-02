@@ -3,6 +3,7 @@
 - name: configure mongodb server
   hosts: mongodb
   become: true
+  gather_facts: false 
   tasks:
   - name: copy mongodg repo
     copy:
