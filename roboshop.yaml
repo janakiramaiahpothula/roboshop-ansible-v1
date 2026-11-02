@@ -13,16 +13,22 @@
     ssh_source_ip: "223.228.102.235/32"
 
     instances:
-      - mongodb
-      - redis
+     # - mongodb
+     # - redis
       - rabbitmq
+      - catalogue
+     # - user
+     # - cart
+     # - shiping
+     # - payment
+     # - froentend
 
     security_groups:
       - common
-      - mongodb
-      - redis
+      # - mongodb
+      # - redis
       - rabbitmq
-      - frontend
+      - catalogue
 
     sg_rules:
       - name: common
@@ -31,23 +37,23 @@
             ports: [22]
             cidr_ip: "{{ ssh_source_ip }}"
 
-      - name: frontend
-        rules:
-          - proto: tcp
-            ports: [80, 443]
-            cidr_ip: 0.0.0.0/0
+      # - name: frontend
+      #   rules:
+      #     - proto: tcp
+      #       ports: [80, 443]
+      #       cidr_ip: 0.0.0.0/0
 
-      - name: mongodb
-        rules:
-          - proto: tcp
-            ports: [27017]
-            group_name: roboshop-common
+      # - name: mongodb
+      #   rules:
+      #     - proto: tcp
+      #       ports: [27017]
+      #       group_name: roboshop-common
 
-      - name: redis
-        rules:
-          - proto: tcp
-            ports: [6379]
-            group_name: roboshop-common
+      # - name: redis
+      #   rules:
+      #     - proto: tcp
+      #       ports: [6379]
+      #       group_name: roboshop-common
 
       - name: rabbitmq
         rules:
