@@ -133,7 +133,19 @@
       loop: "{{ instances }}"
       register: ec2_output
       when: action == "create"
-
+    
+    # 8. CREATE FRONTEND PUBLIC DNS RECORD
+    - name: create R53 record
+      amazon.aws.route53:
+       state: present
+       zone: "{{ domain_name }}"
+       record: "{{ item.item }}.{{ domain_name }}" # mongodb.daws92s.store
+       type: A
+       ttl: 1
+       value: "{{ item.instances[0].private_ip_address }}"
+       overwrite: true
+      loop: "{{ ec2_output.results }}"
+      when: action == "create"
 
     # 9. CREATE FRONTEND PUBLIC DNS RECORD
     - name: Create frontend Route53 record
