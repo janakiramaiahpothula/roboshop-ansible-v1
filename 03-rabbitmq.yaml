@@ -8,6 +8,7 @@
     copy:
       src: rabbitmq.repo
       dest: /etv/yum.repos.d/rabbitmq.repo
+ 
   - name: install rabbitmq server
     dnf:
      name: 
