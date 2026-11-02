@@ -30,7 +30,7 @@
      state: absent
 
   - name: remove catlogue zip
-    fiel: 
+    file: 
      path:  /tmp/catalogue.zip
      state: directory
   
