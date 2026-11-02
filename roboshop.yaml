@@ -7,7 +7,6 @@
     action: create
     domain_name: classpractice.online
     ami_id: ami-0055977a6e828a4f4
-    security_groups: ["mongodb1", "redis1", "rabbitmq1"]
   tasks:
   - name: create ec2 instance
     amazon.aws.ec2_instance:
@@ -18,21 +17,20 @@
     loop: "{{ instances }}" 
     when: action == "create"
     register: ec2_output
-  - name: create security groups for ec2 instances
-    amazon.aws.ec2_security_group:
-     name: "roboshop-{{ security_groups }}"
-     rules:
-       - proto: tcp
-         from_port: 22
-         to_port: 22
-         cidr_ip: "0.0.0.0/0" 
-         state: present
-         register: sg_result
 
-  - name: Print Created Security Group ID
-    ansible.builtin.debug:
-        msg: "Security Group ID is {{ sg_result.group_id }}"
-  
+  - name: Create security groups for EC2 instances
+    amazon.aws.ec2_security_group:
+      name: "{{ item }}"
+      description: "Security group for {{ item }}"
+      state: present
+      region: us-east-1
+    loop:
+    - roboshop-common
+    - roboshop-mongodb1
+    - roboshop-redis1
+    - roboshop-rabbitmq1
+    - roboshop-frontend1
+
   - name: create r53 records
     amazon.aws.route53:
       state: present
